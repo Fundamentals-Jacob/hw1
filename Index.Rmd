@@ -1,0 +1,118 @@
+---
+title: DACCS 601 hw1
+output: html_document
+---
+
+# Start fresh
+
+code for starting fresh?
+```{r}
+rm(list = ls()) #this is cleaning the memory and environment
+```
+
+# get the data
+
+code for opening a file from a url (file in Excel), name it 'fragility23'?
+```{r}
+linkGit="https://github.com/DACSS-Fundamentals/overview/raw/refs/heads/main/FSI-2023-DOWNLOAD.xlsx" #stores the web address of the Excel file
+
+#install.packages('rio')
+library(rio) #loads the package used to read data files (after installing the package)
+fragility23=rio::import(file = linkGit) #downloads the Excel file and reads it into R, making fragility23 the data frame that contains the imported data
+
+```
+
+# exploratory commands
+
+find out column names in 'fragility23'?
+```{r}
+names(x = fragility23) #this returns the column names of the df fragility23
+```
+
+Check the data types in df?
+```{r}
+str(object = fragility23) #displays the structure of an object, shows each column's data type
+```
+
+show me the first 10 rows?
+```{r}
+head(x = fragility23,10) #displays the first 10 rows of the fragility23 df
+```
+
+show me the last 10 rows?
+```{r}
+tail(fragility23,10) #displays the last 10 rows of the fragility23 df
+```
+
+# transformative commands
+
+## subsetting
+
+keep some columns:
+Country, Total,
+S1: Demographic Pressures,
+P1: State Legitimacy,
+E2: Economic Inequality into object 'frag23_sub'
+```{r}
+grep(pattern = "Country|S1|P1|E2|Total",x = names(fragility23),fixed = F,value = T) #searches the column names of fragility23 for any that match "Country", "S1", "P1", "E2", or "total" and shows them
+
+keep=grep("Country|S1|P1|E2|Total",names(fragility23),fixed = F,value = T) #stores the matching column names in the object "keep"
+frag23_sub=fragility23[,keep] #creates a new df "frag23_sub" that includes only the columns listed in "keep"
+```
+
+## renaming
+
+rename 'frag23_sub' columns, keep var codes  only
+```{r}
+names(frag23_sub)[3:5]=c("S1","E2", "P1") #renames columns 3 through 5 of frag23_sub to use only the variable codes "S1", "E2", and "P1" instead of the full names
+```
+
+## filtering
+
+get me the top ten best countries on the  'E2'  measure from 'frag23_sub'
+```{r}
+tail(frag23_sub[order(x=-frag23_sub$E2),'Country'],10) #sorts countries by the "E2" economic inequality score and displays the top ten countries based on that measure (the countries with the lowest score)
+```
+
+# some computations
+
+give the statistical description of "frag23_sub"
+```{r}
+summary(object = frag23_sub) #produces summary statistics (mean, median, max/min, and quartiles) for each variable in the frag23_sub df
+```
+
+the value of the worst quartile in Total
+```{r}
+q3_Total=quantile(x = frag23_sub$Total, probs = 0.75, na.rm = TRUE) #calculates the 75th percentile (worst quartile cutoff) of the "Total" variable in frag23_sub, ignoring missing values
+```
+
+show correlations between "S1","E2", "P1"
+```{r}
+cor(x=frag23_sub[,-c(1,2)]) #calculates the correlations between the "S1" (Demographic Pressures),"E2" (Economic inequality), "P1" (State legitimacy) variables after removing the "Country" and "Total" columns
+```
+
+regress P1 and E2 on S1
+```{r}
+lm(S1~P1+E2,data=frag23_sub) #fits a linear regression predicting "S1" from "P1" and "E2" using the frag23_sub df
+model <- lm(S1 ~ P1 + E2, data = frag23_sub) #saves the regression  results in the object "model" for later use
+summary(model) #displays detailed regression output, including coefficients, R-squared, and significance levels
+```
+
+# some plotting
+
+give me a plot for the 'P1' variable
+```{r}
+hist(x = frag23_sub$P1) #creates a histogram showing the distribution of the variable "P1" values in the frag23_sub df
+```
+visual correlation between S1 and E2
+```{r}
+plot(x=frag23_sub$S1, y=frag23_sub$E2) #creates a scatterplot showing the relationship between the "S1" and "E2" variables in the frag23_sub df
+```
+
+visual of the regression P1 and E2 on S1
+```{r}
+#install.packages("sjPlot") (if not installed already)
+library(sjPlot) #load the "sjPlot" package so its plotting functions can be used
+plot_models(model) #creates a visual summary of the regression results stored in "model"
+```
+
